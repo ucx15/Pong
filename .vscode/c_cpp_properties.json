@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/Src/Include/",
+                "${workspaceFolder}/Lib/SDL2/include"
+            ],
+
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22000.0"
+        }
+    ],
+    "version": 4
+}
