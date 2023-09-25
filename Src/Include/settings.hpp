@@ -15,8 +15,8 @@ constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
 #define PADDING 10
 
 #define PUCK_RAD 10.f
-#define PUCK_VEL 3.f
-#define PADDLE_VEL 2.f
+#define PUCK_VEL 2.f
+#define PADDLE_VEL 3.f
 
 
 #define L_TEXT_POSX  W/10
@@ -30,7 +30,8 @@ constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
 #define BG_COLOR 0x0F0F10FF
 #define FG_COLOR 0xFFFFFFFF
 
-#define PUCK_COLOR 0xFA2010FF
+// #define PUCK_COLOR 0xFA2010FF
+#define PUCK_COLOR 0xAA20F0FF
 #define PADDLE_COLOR FG_COLOR
 
 #define FONT_COLOR_TITLE 0xFF9060FF
@@ -39,3 +40,5 @@ constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
 #define FONT_SIZE_SCORE 72
 #define FONT_SIZE_TITLE 128
 #define FONT_SIZE_TEXT 48
+
+constexpr int TRAIL_SIZE = 40;

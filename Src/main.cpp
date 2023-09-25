@@ -1,5 +1,7 @@
 #include <iostream>
+#include <chrono>
 #include <random>
+
 #include <math.h>
 #include <time.h>
 
@@ -118,7 +120,7 @@ class App {
             auto keys = SDL_GetKeyboardState(NULL);  // Array of u8 codes
             // left paddle
             if (keys[SDL_SCANCODE_W]) {
-                lPaddle.y -= PADDLE_VEL;
+                lPaddle.y -= (PADDLE_VEL);
             }
 
             if (keys[SDL_SCANCODE_S]) {
@@ -143,7 +145,7 @@ class App {
             y /= 5.f;            
 
             float d = sqrtf((x*x) + (y*y));
-            
+
 
             x = PUCK_VEL * (x/d);
             y = PUCK_VEL * (y/d);
@@ -184,23 +186,23 @@ class App {
                 pause();
             }
 
-            if (puck.y < 0) {
-                puck.y = 1;
+            if (puck.y < PADDING) {
+                puck.y = PADDING+1;
                 puck.velY *= -1;
             }
 
-            else if (puck.y > (H - PUCK_RAD)) {
-                puck.y = H - PUCK_RAD - 1;
+            else if (puck.y > (H - PUCK_RAD - PADDING)) {
+                puck.y = H - PUCK_RAD - PADDING - 1;
                 puck.velY *= -1;
             }
 
             // Collision detection with Paddles
-            if ((puck.x < (PADDING + PAD_W)) & ((puck.y-puck.h/2) > lPaddle.y) & ((puck.y+puck.h/2) < lPaddle.y + PAD_H)) {
+            if ((puck.x < (PADDING + PAD_W)) & ((puck.y-puck.h) > lPaddle.y) & ((puck.y+puck.h) < lPaddle.y + PAD_H)) {
                 puck.x = (PADDING + PAD_W + 1);
                 puck.velX *= -1;
             }
 
-            if ((puck.x > (W - PADDING - PAD_W - PUCK_RAD)) & ((puck.y-puck.h/2) > rPaddle.y) & ((puck.y+puck.h/2) < rPaddle.y + PAD_H)) {
+            if ((puck.x > (W - PADDING - PAD_W - PUCK_RAD)) & ((puck.y-puck.h) > rPaddle.y) & ((puck.y+puck.h) < rPaddle.y + PAD_H)) {
                 puck.x = (W - PADDING - PAD_W - PUCK_RAD - 1);
                 puck.velX *= -1;
             }
@@ -215,6 +217,7 @@ class App {
 
             puck.x = W/2 - PUCK_RAD/2;
             puck.y = H/2 - PUCK_RAD/2;
+            puck.resetTrails();
         }
 
         void update() {
@@ -414,40 +417,55 @@ class App {
             homePage();
             launchPuck();
 
-            while( is_running ) {
-            // ------ Handling Events ------
-            while( SDL_PollEvent(&event) ) {
-                if(event.type == SDL_QUIT) {
-                    is_running = false;
-                }
+            std::chrono::high_resolution_clock::time_point t1;
+            std::chrono::high_resolution_clock::time_point t2;
+            std::chrono::high_resolution_clock::time_point t3;
 
-                if(event.type == SDL_KEYDOWN) {
-                    auto key = event.key.keysym.sym;
-                    if (key == SDLK_ESCAPE) {
+            int64_t dTuS;  // Render Time (uS)
+            float dTmS;
+
+            while( is_running ) {  
+                t1 = std::chrono::high_resolution_clock::now();
+
+                // ------ Handling Events ------
+                while( SDL_PollEvent(&event) ) {
+                    if(event.type == SDL_QUIT) {
                         is_running = false;
                     }
+
+                    if(event.type == SDL_KEYDOWN) {
+                        auto key = event.key.keysym.sym;
+                        if (key == SDLK_ESCAPE) {
+                            is_running = false;
+                        }
+                    }
                 }
+
+
+                // ------ Validation ------
+                if (gotWinner()) {
+                    is_running = false;
+                    gameOver();
+                }
+
+
+                // ------ Handling Keyboard Input ------
+                handleKeyboardInput();
+
+                // ------ Physics ------
+                
+                update();
+
+
+                // ------ Rendering ------
+                render();
+
+                t2 = std::chrono::high_resolution_clock::now();
+                dTuS = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+                dTmS = (float) dTuS / 1000.f;
+
+                SDL_Delay( std::max(0, int(MSPF-dTmS) ) );
             }
-
-
-            // ------ Validation ------
-            if (gotWinner()) {                
-                is_running = false;
-                gameOver();
-            }
-
-
-            // ------ Handling Keyboard Input ------
-            handleKeyboardInput();
-
-            // ------ Physics ------
-            update();
-
-            // ------ Rendering ------
-            render();
-
-            SDL_Delay(MSPF);
-        }
 
         destroyApp();
     }
