@@ -8,8 +8,8 @@
 # -------- BUILD SETTINGS --------
 
 $out_file = "Pong.exe"
-# $src_files = "text", "puck", "paddle"     # ALL
-$src_files = ""
+# $src_files = "text", "puck", "paddle", "utils"     # ALL
+$src_files = "puck"
 
 $build_all = $true;
 
