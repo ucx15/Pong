@@ -2,6 +2,8 @@
 
 A clone of a Classic Pong Game in C++.
 
+**⚠️ Currently in Dev.**
+
 ## Dependencies
 
 * [SDL2](https://www.libsdl.org/)

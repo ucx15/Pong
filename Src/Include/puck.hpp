@@ -23,6 +23,8 @@ class Puck {
 		
 		void resetTrails();
 		void update();
+
+		void drawCircle(SDL_Renderer* renderer, SDL_Rect &rect);
 		void draw(SDL_Renderer* renderer);
 
 

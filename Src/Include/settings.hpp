@@ -16,7 +16,7 @@ constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
 
 #define PUCK_RAD 10.f
 #define PUCK_VEL 2.f
-#define PADDLE_VEL 3.f
+#define PADDLE_VEL 2.5f
 
 
 #define L_TEXT_POSX  W/10

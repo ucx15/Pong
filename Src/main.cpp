@@ -46,6 +46,9 @@ class App {
         SDL_Renderer* renderer = nullptr;
         SDL_Event event;
 
+        std::random_device rd;
+        std::uniform_int_distribution<int> dist = std::uniform_int_distribution<int>(0, 1);
+
         const char* fontPath = "./Res/Brickshapers.ttf";
     
         bool is_running = false;
@@ -87,7 +90,7 @@ class App {
                 std::cout << "Can't initiate Renderer";
                 exit(EXIT_FAILURE);
             }
-
+            
             // Game Setup
             setup();
         }
@@ -140,15 +143,12 @@ class App {
 
         // Physics
         void launchPuck() {
-            float x = 2.f * (float) rand()/RAND_MAX - 1.f;
-            float y = 2.f*(float) rand()/RAND_MAX - 1.f;
-            y /= 5.f;            
+            float x,y;
+            x = PUCK_VEL;
+            y = H*dist(rd);
 
-            float d = sqrtf((x*x) + (y*y));
-
-
-            x = PUCK_VEL * (x/d);
-            y = PUCK_VEL * (y/d);
+            float d = sqrtf(sq(W/2.f - x) + sq(H/2.f - y)); 
+            y = PUCK_VEL*y/d;
 
             puck.velX = x;
             puck.velY = y;
@@ -422,11 +422,9 @@ class App {
             std::chrono::high_resolution_clock::time_point t3;
 
             int64_t dTuS;  // Render Time (uS)
-            float dTmS;
+            int dTmS;
 
             while( is_running ) {  
-                t1 = std::chrono::high_resolution_clock::now();
-
                 // ------ Handling Events ------
                 while( SDL_PollEvent(&event) ) {
                     if(event.type == SDL_QUIT) {
@@ -441,6 +439,7 @@ class App {
                     }
                 }
 
+                t1 = std::chrono::high_resolution_clock::now();
 
                 // ------ Validation ------
                 if (gotWinner()) {
@@ -462,9 +461,9 @@ class App {
 
                 t2 = std::chrono::high_resolution_clock::now();
                 dTuS = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-                dTmS = (float) dTuS / 1000.f;
+                dTmS = dTuS / 1000;
 
-                SDL_Delay( std::max(0, int(MSPF-dTmS) ) );
+                SDL_Delay( std::max(0, int(MSPF-dTmS)) );
             }
 
         destroyApp();
