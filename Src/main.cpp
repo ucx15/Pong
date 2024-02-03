@@ -48,9 +48,12 @@ SDL_Rect rectLine {
 
 class App {
     public:
-        SDL_Window* window = nullptr;
-        SDL_Renderer* renderer = nullptr;
+        SDL_Window *window = NULL;
+        SDL_Renderer *renderer = NULL;
+        SDL_Surface *surface = NULL;
+        SDL_Texture *texture = NULL;
         SDL_Event event;
+
 
         const char* fontPath = "./Res/Brickshapers.ttf";
     
@@ -76,31 +79,40 @@ class App {
                 "Pong",
                 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                 W, H,
-                SDL_WINDOW_SHOWN
-            );
-            SDL_SetWindowBordered(window, SDL_FALSE );
+                SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
 
-
-            if (window == nullptr) {
-                std::cout << "Can't initiate SDL_window";
+            if ( !window ) {
+                std::cout << "Can't initiate SDL_window\n";
                 exit(EXIT_FAILURE);
             }
-            
+
             renderer =  SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-            
-            if (renderer == nullptr) {
-                std::cout << "Can't initiate Renderer";
+            if ( !renderer ) {
+                std::cout << "Can't initiate Renderer\n";
                 exit(EXIT_FAILURE);
             }
-            
+
+            surface = SDL_CreateRGBSurface(0, W, H, 32, 0xFF000000,  0x00FF0000, 0x0000FF00, 0x000000FF);
+            if ( !surface ) {
+                std::cout << "Can't initiate Surface\n";
+                exit(EXIT_FAILURE);
+            }
+
+            texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, W, H);
+            if ( !texture ) {
+                std::cout << "SDL_CreateTexture failed\n";
+                exit(EXIT_FAILURE);
+            }
+
             // Game Setup
             setup();
         }
 
         void destroyApp() {
+            SDL_DestroyTexture(texture);
             SDL_DestroyRenderer(renderer);
             SDL_DestroyWindow(window);
-            
+
             TTF_Quit();
             SDL_Quit();
         };
@@ -151,8 +163,8 @@ class App {
             float d = sqrtf(sq(W/2.f - x) + sq(H/2.f - y)); 
             y = PUCK_VEL*y/d;
 
-            puck.velX = x;
-            puck.velY = y;
+            puck.velX += x;
+            puck.velY += y;
         }
 
         void collision() {
@@ -177,13 +189,13 @@ class App {
             // Collision detection with Walls
             if (puck.x < 0) {
                 scoreRight++;
-                rightScoreText.update(renderer, std::to_string(scoreRight));
+                rightScoreText.update(std::to_string(scoreRight));
                 pause();
             }
 
             else if (puck.x > (W - PUCK_RAD)) {
                 scoreLeft++;
-                leftScoreText.update(renderer, std::to_string(scoreLeft));
+                leftScoreText.update(std::to_string(scoreLeft));
                 pause();
             }
 
@@ -198,12 +210,12 @@ class App {
             }
 
             // Collision detection with Paddles
-            if ((puck.x < (PADDING + PAD_W)) & ((puck.y-puck.h) > lPaddle.y) & ((puck.y+puck.h) < lPaddle.y + PAD_H)) {
+            if ((puck.x < (PADDING + PAD_W)) & ((puck.y-puck.r) > lPaddle.y) & ((puck.y+puck.r) < lPaddle.y + PAD_H)) {
                 puck.x = (PADDING + PAD_W + 1);
                 puck.velX *= -1;
             }
 
-            if ((puck.x > (W - PADDING - PAD_W - PUCK_RAD)) & ((puck.y-puck.h) > rPaddle.y) & ((puck.y+puck.h) < rPaddle.y + PAD_H)) {
+            if ((puck.x > (W - PADDING - PAD_W - PUCK_RAD)) & ((puck.y-puck.r) > rPaddle.y) & ((puck.y+puck.r) < rPaddle.y + PAD_H)) {
                 puck.x = (W - PADDING - PAD_W - PUCK_RAD - 1);
                 puck.velX *= -1;
             }
@@ -231,28 +243,27 @@ class App {
 
         // Pages
         void homePage() {
-            Text textPong = Text(renderer, fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
-            Text textIns  = Text(renderer, fontPath, FONT_SIZE_TEXT, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            Text textPong = Text(fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+            Text textIns  = Text(fontPath, FONT_SIZE_TEXT, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
 
-            textPong.update(renderer, "PONG");
-            textIns.update(renderer, "Press SPACE to play...");
+            textPong.update("PONG");
+            textIns.update("Press SPACE to play...");
 
 
             // Clearing Background
-            SDL_SetRenderDrawColor(renderer, to8BPC(BG_COLOR));
-            SDL_RenderClear(renderer);
+            fillSurface(BG_COLOR);
 
             // Drawing Borders
-            SDL_SetRenderDrawColor(renderer, to8BPC(FG_COLOR));
-            SDL_RenderDrawRect(renderer, &rectBorder);
+            this->drawBorders();
+            // drawRect((uint32_t *)surface->pixels, PADDING,PADDING, W-PADDING, H-PADDING, FG_COLOR);
 
-            lPaddle.draw(renderer);
-            rPaddle.draw(renderer);
+            lPaddle.draw(surface);
+            rPaddle.draw(surface);
             
-            textPong.display(renderer, W/2 - textPong.Width()/2, H/2 - textPong.Height()/2);
-            textIns.display(renderer, W/2 - textIns.Width()/2, H - H/4);
+            textPong.display(surface, W/2 - textPong.Width()/2, H/2 - textPong.Height()/2);
+            textIns.display(surface, W/2 - textIns.Width()/2, H - H/4);
 
-            SDL_RenderPresent(renderer);
+            this->present();
 
             while (!is_running) {
                 while( SDL_PollEvent(&event) ) {
@@ -308,28 +319,28 @@ class App {
 
         void gameOver() {
             if (scoreLeft > scoreRight){
-                gameOverText.update(renderer, "Left Wins");
-            }        
+                gameOverText.update("Left Wins");
+            }
             else if (scoreRight > scoreLeft) {
-                gameOverText.update(renderer, "Right Wins");
+                gameOverText.update("Right Wins");
             }
             else {
-                gameOverText.update(renderer, "Draw");
+                gameOverText.update("Draw");
             }
 
             // Clearing Background
-            SDL_SetRenderDrawColor(renderer, to8BPC(BG_COLOR));
-            SDL_RenderClear(renderer);
+            fillSurface(BG_COLOR);
             
             // Drawing Borders
-            SDL_SetRenderDrawColor(renderer, to8BPC(FG_COLOR));
-            SDL_RenderDrawRect(renderer, &rectBorder);
+            // drawRect((uint32_t*)surface->pixels, 0,0, W,H, FG_COLOR);
+            this->drawBorders();
 
-            leftScoreText.display(renderer, L_TEXT_POSX, L_TEXT_POSY);
-            rightScoreText.display(renderer, R_TEXT_POSX, R_TEXT_POSY);
-
-            gameOverText.display(renderer, W/2 - gameOverText.Width()/2, H/2 - gameOverText.Height()/2);
-            SDL_RenderPresent(renderer);
+            // Draw Score
+            leftScoreText.display(surface, L_TEXT_POSX, L_TEXT_POSY);
+            rightScoreText.display(surface, R_TEXT_POSX, R_TEXT_POSY);
+            gameOverText.display(surface, W/2 - gameOverText.Width()/2, H/2 - gameOverText.Height()/2);
+            
+            this->present();
 
             while (!is_running) {
                 while( SDL_PollEvent(&event) ) {
@@ -355,8 +366,8 @@ class App {
             scoreLeft = 0;
             scoreRight = 0; 
 
-            leftScoreText.update(renderer, std::to_string(scoreLeft));
-            rightScoreText.update(renderer, std::to_string(scoreRight));
+            leftScoreText.update(std::to_string(scoreLeft));
+            rightScoreText.update(std::to_string(scoreRight));
         }
 
 
@@ -365,7 +376,7 @@ class App {
             scoreLeft = 0;
             scoreRight = 0;
 
-            puck = Puck(W/2 - PUCK_RAD/2, H/2 - PUCK_RAD/2, PUCK_RAD, PUCK_RAD, PUCK_COLOR);
+            puck = Puck(W/2 - PUCK_RAD/2, H/2 - PUCK_RAD/2, PUCK_RAD, PUCK_COLOR);
 
             lPaddle = Paddle(
                 PADDING,
@@ -383,35 +394,53 @@ class App {
                 PADDLE_COLOR
             );
 
-            leftScoreText  = Text(renderer, fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
-            rightScoreText = Text(renderer, fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
-            gameOverText   = Text(renderer, fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+            leftScoreText  = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            rightScoreText = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            gameOverText   = Text(fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
 
-            leftScoreText.update(renderer, "0");
-            rightScoreText.update(renderer, "0");
+            leftScoreText.update("0");
+            rightScoreText.update("0");
         }
+    
+        void fillSurface(uint32_t color) {
+            for (int i=0; i<W*H; i++) {
+                ((uint32_t*)surface->pixels)[i] = color;
+            }
+        }
+
+
+        void present() {
+            SDL_UpdateTexture(texture, nullptr, surface->pixels, W*4);
+
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            SDL_RenderPresent(renderer);
+        }
+
+        void drawBorders() {
+            drawRect((uint32_t*)surface->pixels, PADDING,PADDING, W-2*PADDING,H-2*PADDING, FG_COLOR);
+        }
+
 
         void render() {
             // Clearing Surface
-            SDL_SetRenderDrawColor(renderer, to8BPC(BG_COLOR));  // clear the background
-            SDL_RenderClear(renderer);
+            fillSurface(BG_COLOR);
 
             // Drawing Board
-            SDL_SetRenderDrawColor(renderer, to8BPC(FG_COLOR));
-            SDL_RenderDrawRect(renderer, &rectBorder);
-            SDL_RenderFillRect(renderer, &rectLine);
-            
-            // Drawing Score
-            leftScoreText.display(renderer, L_TEXT_POSX, L_TEXT_POSY);
-            rightScoreText.display(renderer, R_TEXT_POSX, R_TEXT_POSY);
-            
-            // Drawing Paddles and Puck
-            lPaddle.draw(renderer);
-            rPaddle.draw(renderer);
-            puck.draw(renderer);
+            this->drawBorders();            
+            fillRect((uint32_t*)surface->pixels, W/2 -1, PADDING, 2, H-2*PADDING, FG_COLOR);           
 
-            // Updating Surface
-            SDL_RenderPresent(renderer);
+
+            // Drawing Score
+            leftScoreText.display(surface, L_TEXT_POSX, L_TEXT_POSY);
+            rightScoreText.display(surface, R_TEXT_POSX, R_TEXT_POSY);
+
+            // Drawing Paddles and Puck
+            lPaddle.draw(surface);
+            rPaddle.draw(surface);
+            puck.draw(surface);
+
+            this->present();
         }
 
         void run() {
@@ -485,12 +514,3 @@ int main(int argc, char** argv) {
 
     return EXIT_SUCCESS;
 }
-
-/* 
-TODO:
-    Massive Refactoring
-    [✔️] Remove optional dependency SDL_image
-    [✔️] rand() for random number generation
-    [✔️] chrono time macros
-    [✔️] correct deltaTime calculation
- */

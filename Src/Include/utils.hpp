@@ -11,3 +11,10 @@ void shiftLeft2Arrays(float* arr1, float* arr2, int N);
 
 void toComponents(const uint32_t &c, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
 void fromComponents(uint32_t &c, const uint8_t &r, const uint8_t &g, const uint8_t &b, const uint8_t &a);
+
+
+void drawRect(uint32_t *buffer, int x, int y, int w, int h, uint32_t color);
+void fillRect(uint32_t *buffer, int x, int y, int w, int h, uint32_t color);
+
+void drawCircle(uint32_t *buffer, int x, int y, int r, uint32_t color);
+void fillCircle(uint32_t *buffer, int x, int y, int r, uint32_t color);

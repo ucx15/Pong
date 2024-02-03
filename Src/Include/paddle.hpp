@@ -8,16 +8,15 @@
 
 class Paddle {
 	public:
-		float x;
-		float y;
+		float x, y;
+		float w, h;
+
 		uint32_t color;
 
 		Paddle();
 		Paddle(int x0, int y0, int width, int height, uint32_t c);	
 
 		void update();
-		void draw(SDL_Renderer* renderer);
+		void draw(SDL_Surface *surface);
 
-	private:
-		SDL_Rect _rect;
 };

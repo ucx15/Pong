@@ -1,22 +1,18 @@
-// #include <iostream>
-
+#include <cmath>
 #include "puck.hpp"
 #include "utils.hpp"
 
 Puck::Puck() {}
 
-Puck::Puck(float x0, float y0, float width, float height, uint32_t c) {	
-	w = width;
-	h = height;
-	color = c;
-
+Puck::Puck(float x0, float y0, float width, uint32_t c) {	
 	x = x0;
 	y = y0;
+	r = width;
+
+	color = c;
 
 	velX = 0.f;
 	velY = 0.f;
-
-	_rect = SDL_Rect{(int)x, (int)y, (int)(w), (int)(h)};
 
 	// trials
 	trail_color = color;
@@ -24,7 +20,6 @@ Puck::Puck(float x0, float y0, float width, float height, uint32_t c) {
 	trails_itr = 0;
 	trails_x = new float[TRAIL_SIZE];
 	trails_y = new float[TRAIL_SIZE];
-	_trail_rect = SDL_Rect{(int)x, (int)y, (int)(w), (int)(h)};
 }
 
 void Puck::resetTrails() {
@@ -35,9 +30,6 @@ void Puck::update() {
 	// Eulers integration
 	x += velX;
 	y += velY;
-
-	_rect.x = x;
-	_rect.y = y;
 
 	if (trails_itr < TRAIL_SIZE) {
 		trails_x[trails_itr] = x;
@@ -53,44 +45,27 @@ void Puck::update() {
 }
 
 
-void Puck::drawCircle(SDL_Renderer* renderer, SDL_Rect &rect) {
-    int xSt = rect.x-rect.w;
-    int xEn = rect.x+rect.h;
-    int ySt = rect.y-rect.w;
-    int yEn = rect.y+rect.h;
-
-    for (int py = ySt; py < yEn; py++){
-        for (int px = xSt; px < xEn; px++) {
-            
-            if ( (sq(px-rect.x) + sq(py-rect.y)) < sq(PUCK_RAD) ) {
-                SDL_RenderDrawPoint(renderer, px, py);
-            }
-        }
-    }
-}
-
-
-void Puck::draw(SDL_Renderer* renderer) {
+void Puck::draw(SDL_Surface* surface) {
 	uint8_t cR, cG, cB, cA;
 	uint32_t tColor;
+	uint32_t* drawBuffer = (uint32_t*)surface->pixels;
 	float t;
+	int tx, ty, tr;
 
- 
 	for (int i=0; i<trails_itr; i++) {
 		t = (float)i/trails_itr;
+		// t = sqrtf(t);    // Easing function
+		t = t*t;    // Easing function
 
-		_trail_rect.x = trails_x[i];
-		_trail_rect.y = trails_y[i];
-		_trail_rect.w = (int)(w)*t;
-		_trail_rect.h = (int)(h)*t;
+		tx = trails_x[i];
+		ty = trails_y[i];
+		tr = roundf(r*t);
 
 		toComponents(trail_color, cR, cG, cB, cA);
 		fromComponents(tColor, (uint8_t) cR*(t), (uint8_t) cG*(1-t), cB, cA);
-	
-		SDL_SetRenderDrawColor(renderer, to8BPC(tColor));
-		this->drawCircle(renderer, _trail_rect);
+
+		drawCircle(drawBuffer, tx, ty, tr, tColor);
 	}
 
-	SDL_SetRenderDrawColor(renderer, to8BPC(color));
-	this->drawCircle(renderer, _rect);
+	drawCircle(drawBuffer, int(x), int(y), PUCK_RAD, color);
 }

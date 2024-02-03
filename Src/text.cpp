@@ -4,27 +4,23 @@
 
 Text::Text() {};
 
-Text::Text(SDL_Renderer* renderer, const char* font_path, int font_size, SDL_Color color) {
-	_renderer = renderer;
+Text::Text(const char* font_path, int font_size, SDL_Color color) {
 	_color = color;
 	_font = TTF_OpenFont(font_path, font_size);
 }
 
 
-void Text::update(SDL_Renderer* renderer, std::string msg) {
-	auto text_surface = TTF_RenderText_Solid(_font, msg.c_str(), _color);
-	_text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-	SDL_FreeSurface(text_surface);
-
-	SDL_QueryTexture(_text_texture, nullptr, nullptr, &_text_rect.w, &_text_rect.h);
+void Text::update(std::string msg) {
+	_text_surface = TTF_RenderText_Solid(_font, msg.c_str(), _color);
+	_text_rect.w = _text_surface->w;
+	_text_rect.h = _text_surface->h;
 }
 
 
-void Text::display(SDL_Renderer* renderer, int x, int y) {
+void Text::display(SDL_Surface* surface, int x, int y) {
 	_text_rect.x = x;
 	_text_rect.y = y;
-
-	SDL_RenderCopy(renderer, _text_texture, nullptr, &_text_rect);
+	SDL_BlitSurface(_text_surface, NULL, surface, &_text_rect);
 }
 
 float Text::Width() {
