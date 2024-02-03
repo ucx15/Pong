@@ -7,6 +7,7 @@
 
 #define FPS 240
 constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
+#define UPDATE_TIME 1000  // in ms
 
 
 #define PAD_W 10
@@ -15,7 +16,7 @@ constexpr int MSPF = 1000.f / FPS;  // Milliseconds per frame (Ideal)
 #define PADDING 10
 
 #define PUCK_RAD 10.f
-#define PUCK_VEL 2.f
+#define PUCK_VEL .5f
 #define PADDLE_VEL 2.5f
 
 

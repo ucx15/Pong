@@ -9,7 +9,7 @@
 
 $out_file = "Pong.exe"
 $src_files = "main", "text", "puck", "paddle", "utils"     # ALL
-# $src_files = "main"
+$src_files = "main"
 
 $build_all = $true;
 

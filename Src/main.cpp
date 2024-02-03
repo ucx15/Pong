@@ -1,8 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include <random>
-
-#include <math.h>
+#include <cmath>
 #include <time.h>
 
 #include "SDL.h"
@@ -13,6 +11,15 @@
 #include "puck.hpp"
 #include "paddle.hpp"
 #include "text.hpp"
+
+
+// MACROS
+#define TIME_PT std::chrono::high_resolution_clock::time_point
+#define TIME_NOW() std::chrono::high_resolution_clock::now()
+#define TIME_DUR(b,a) std::chrono::duration_cast<std::chrono::microseconds>(b-a).count()
+
+#define randF() ((float)rand()/RAND_MAX)
+
 
 
 void parseArgs(int n, char** args) {
@@ -44,9 +51,6 @@ class App {
         SDL_Window* window = nullptr;
         SDL_Renderer* renderer = nullptr;
         SDL_Event event;
-
-        std::random_device rd;
-        std::uniform_int_distribution<int> dist = std::uniform_int_distribution<int>(0, 1);
 
         const char* fontPath = "./Res/Brickshapers.ttf";
     
@@ -142,7 +146,7 @@ class App {
         void launchPuck() {
             float x,y;
             x = PUCK_VEL;
-            y = H*dist(rd);
+            y = H*randF();
 
             float d = sqrtf(sq(W/2.f - x) + sq(H/2.f - y)); 
             y = PUCK_VEL*y/d;
@@ -228,7 +232,7 @@ class App {
         // Pages
         void homePage() {
             Text textPong = Text(renderer, fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
-            Text textIns = Text(renderer, fontPath, FONT_SIZE_TEXT, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            Text textIns  = Text(renderer, fontPath, FONT_SIZE_TEXT, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
 
             textPong.update(renderer, "PONG");
             textIns.update(renderer, "Press SPACE to play...");
@@ -379,9 +383,9 @@ class App {
                 PADDLE_COLOR
             );
 
-            leftScoreText = Text(renderer, fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            leftScoreText  = Text(renderer, fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
             rightScoreText = Text(renderer, fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
-            gameOverText = Text(renderer, fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+            gameOverText   = Text(renderer, fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
 
             leftScoreText.update(renderer, "0");
             rightScoreText.update(renderer, "0");
@@ -414,14 +418,21 @@ class App {
             homePage();
             launchPuck();
 
-            std::chrono::high_resolution_clock::time_point t1;
-            std::chrono::high_resolution_clock::time_point t2;
-            std::chrono::high_resolution_clock::time_point t3;
+            float dTmS, dT;
+            int tLastLogged=0;
 
-            int64_t dTuS;  // Render Time (uS)
-            int dTmS;
+            TIME_PT t1, t2, t3;
+            t1 = TIME_NOW();
+
 
             while( is_running ) {  
+
+                t2 = TIME_NOW();
+                dTmS = TIME_DUR(t2, t1) / 1E3F;
+                dT = dTmS / 1E3F;
+                t1 = TIME_NOW();
+
+
                 // ------ Handling Events ------
                 while( SDL_PollEvent(&event) ) {
                     if(event.type == SDL_QUIT) {
@@ -436,8 +447,6 @@ class App {
                     }
                 }
 
-                t1 = std::chrono::high_resolution_clock::now();
-
                 // ------ Validation ------
                 if (gotWinner()) {
                     is_running = false;
@@ -449,18 +458,18 @@ class App {
                 handleKeyboardInput();
 
                 // ------ Physics ------
-                
                 update();
-
 
                 // ------ Rendering ------
                 render();
 
-                t2 = std::chrono::high_resolution_clock::now();
-                dTuS = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-                dTmS = dTuS / 1000;
-
                 SDL_Delay( std::max(0, int(MSPF-dTmS)) );
+                tLastLogged += dTmS;
+
+                if ( tLastLogged > UPDATE_TIME ) {
+                    tLastLogged = 0;
+                    std::cout << "FPS: " << 1/dT << '\n';
+                }
             }
 
         destroyApp();
@@ -480,8 +489,8 @@ int main(int argc, char** argv) {
 /* 
 TODO:
     Massive Refactoring
-    . Remove optional dependency SDL_image
-    . rand for random number generation
-    . chrono time macros
-    . correct deltaTime calculation
+    [✔️] Remove optional dependency SDL_image
+    [✔️] rand() for random number generation
+    [✔️] chrono time macros
+    [✔️] correct deltaTime calculation
  */
