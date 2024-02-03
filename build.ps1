@@ -8,13 +8,13 @@
 # -------- BUILD SETTINGS --------
 
 $out_file = "Pong.exe"
-$src_files = "text", "puck", "paddle", "utils"     # ALL
-# $src_files = "puck"
+$src_files = "main", "text", "puck", "paddle", "utils"     # ALL
+# $src_files = "main"
 
 $build_all = $true;
 
 
-$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-g3", "-s"
+$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-g3"
 $include_path = "Src/Include"
 
 
@@ -25,15 +25,10 @@ $inc_sdl = "./Lib/SDL2/include/"
 
 # Library Paths
 $lib_sdl = "./Lib/SDL2/lib/"
-$lib_sdl_img = "./Lib/SDL2_image/lib/"
 $lib_sdl_ttf = "./Lib/SDL2_ttf/lib/"
 
 
-# Dynamic-Linking
-$link_sdl = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_image", "-lSDL2_ttf"
-
-# Static-Linking
-# $link_sdl = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_image", "-lSDL2_ttf", "-Wl,--dynamicbase", "-Wl,--nxcompat",  "-Wl,--high-entropy-va", "-lm", "-ldinput8", "-ldxguid", "-ldxerr8", "-luser32",  "-lgdi32", "-lwinmm", "-limm32", "-lole32", "-loleaut32", "-lshell32", "-lsetupapi", "-lversion", "-luuid", "-lusp10", "-lgdi32", "-lrpcrt4"
+$LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
 
 
 # -------- BUILD SCRIPT --------
@@ -58,7 +53,7 @@ if (($build_all) -and ($src_files)) {
 			Remove-Item Obj/${file}.o
 		}
 
-		g++ $C_FLAGS -I $include_path -I $inc_sdl -L $lib_sdl -L $lib_sdl_img -L $lib_sdl_ttf  $link_sdl -o Obj/${file}.o -c Src/${file}.cpp
+		g++ $C_FLAGS -I $include_path -I $inc_sdl -o Obj/${file}.o -c Src/${file}.cpp
 	
 	}
 }
@@ -67,7 +62,7 @@ if (($build_all) -and ($src_files)) {
 # Linking
 Write-Output "Linking"
 $obj_files = Get-ChildItem -Path Obj/
-g++ $C_FLAGS "Src/main.cpp" $obj_files -I $include_path -I $inc_sdl -L $lib_sdl -L $lib_sdl_img -L $lib_sdl_ttf $link_sdl -o $out_file
+g++ $C_FLAGS $obj_files -L $lib_sdl -L $lib_sdl_ttf $LINKER_FLAGS -o $out_file
 
 
 # Running current build

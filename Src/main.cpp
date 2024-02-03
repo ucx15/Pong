@@ -6,7 +6,6 @@
 #include <time.h>
 
 #include "SDL.h"
-#include "SDL_image.h"
 #include "SDL_ttf.h"
 
 #include "settings.hpp"
@@ -66,8 +65,7 @@ class App {
 
 
         App() {
-            SDL_Init(SDL_INIT_VIDEO);
-            IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+            SDL_Init(SDL_INIT_EVERYTHING);
             TTF_Init();
 
             window = SDL_CreateWindow(
@@ -99,9 +97,8 @@ class App {
             SDL_DestroyRenderer(renderer);
             SDL_DestroyWindow(window);
             
-            SDL_Quit();
-            IMG_Quit();
             TTF_Quit();
+            SDL_Quit();
         };
 
         // Misc.   
@@ -479,3 +476,12 @@ int main(int argc, char** argv) {
 
     return EXIT_SUCCESS;
 }
+
+/* 
+TODO:
+    Massive Refactoring
+    . Remove optional dependency SDL_image
+    . rand for random number generation
+    . chrono time macros
+    . correct deltaTime calculation
+ */
