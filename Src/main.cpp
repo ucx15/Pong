@@ -210,13 +210,16 @@ class App {
             }
 
             // Collision detection with Paddles
-            if ((puck.x < (PADDING + PAD_W)) & ((puck.y-puck.r) > lPaddle.y) & ((puck.y+puck.r) < lPaddle.y + PAD_H)) {
-                puck.x = (PADDING + PAD_W + 1);
+            bool leftCond  = (puck.x < 0+PADDING+PAD_W+PUCK_RAD)  &  (puck.y+puck.r/2 > lPaddle.y)  &  (puck.y-puck.r/2 < lPaddle.y+PAD_H);
+            bool rightCond = (puck.x > W-PADDING-PAD_W-PUCK_RAD)  &  (puck.y+puck.r/2 > rPaddle.y)  &  (puck.y-puck.r/2 < rPaddle.y+PAD_H);
+
+            if (leftCond) {
+                puck.x = 0 + PADDING + PAD_W + PUCK_RAD + 1;
                 puck.velX *= -1;
             }
 
-            if ((puck.x > (W - PADDING - PAD_W - PUCK_RAD)) & ((puck.y-puck.r) > rPaddle.y) & ((puck.y+puck.r) < rPaddle.y + PAD_H)) {
-                puck.x = (W - PADDING - PAD_W - PUCK_RAD - 1);
+            else if (rightCond) {
+                puck.x = W - PADDING - PAD_W - PUCK_RAD - 1;
                 puck.velX *= -1;
             }
         }
@@ -255,7 +258,6 @@ class App {
 
             // Drawing Borders
             this->drawBorders();
-            // drawRect((uint32_t *)surface->pixels, PADDING,PADDING, W-PADDING, H-PADDING, FG_COLOR);
 
             lPaddle.draw(surface);
             rPaddle.draw(surface);
@@ -332,7 +334,6 @@ class App {
             fillSurface(BG_COLOR);
             
             // Drawing Borders
-            // drawRect((uint32_t*)surface->pixels, 0,0, W,H, FG_COLOR);
             this->drawBorders();
 
             // Draw Score

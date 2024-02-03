@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+
 #include "settings.hpp"
 #include "utils.hpp"
 
@@ -69,10 +71,12 @@ void drawCircle(uint32_t *buffer, int x, int y, int r, uint32_t color) {
     int ySt = std::min(H, std::max(0, (y-r) ));
     int yEn = std::min(H, std::max(0, (y+r) ));
 
-    for (int py=ySt; py<yEn; py++){
+    int r_sq = r*r + 1;
+
+    for (int py=ySt; py<yEn; py++) {
         for (int px=xSt; px<xEn; px++) {
-            if ( (sq(px-x) + sq(py-y)) < sq(r) ) {
-				buffer[py*W + px] = color;
+            if ( sq(x-px)+sq(y-py) < r_sq ) {
+                buffer[py*W + px]= color;  
             }
         }
     }
