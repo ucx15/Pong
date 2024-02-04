@@ -11,7 +11,7 @@ $out_file = "Pong.exe"
 $src_files = "main", "text", "puck", "paddle", "utils"     # ALL
 # $src_files = "main" 
 
-$build_all = $true;
+$build_all = $false;
 
 
 $C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-O3"
@@ -28,7 +28,16 @@ $lib_sdl = "./Lib/SDL2/lib/"
 $lib_sdl_ttf = "./Lib/SDL2_ttf/lib/"
 
 
-$LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
+# -mwindows  Window based (Not Console Based)
+
+#Dynamic Link
+# $LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
+
+#Static Link
+$LINKER_FLAGS = "-lmingw32",
+"-lSDL2main", "-lSDL2", "-lSDL2_ttf", 
+"-Wl,--dynamicbase", "-Wl,--nxcompat", "-Wl,--high-entropy-va",
+"-lm", "-ldinput8", "-ldxguid", "-ldxerr8", "-luser32", "-lgdi32", "-lwinmm", "-limm32", "-lole32", "-loleaut32", "-lshell32", "-lsetupapi", "-lversion", "-luuid"
 
 
 # -------- BUILD SCRIPT --------
