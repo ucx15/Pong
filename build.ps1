@@ -11,10 +11,18 @@ $out_file = "Pong.exe"
 $src_files = "main", "text", "puck", "paddle", "utils"     # ALL
 # $src_files = "main" 
 
-$build_all = $false;
+$build_all = $true;
 
 
 $C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-O3"
+
+# Linking (Dynamic)
+
+# -mwindows  Window based (Not Console Based)
+$LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
+
+
+
 $include_path = "Src/Include"
 
 
@@ -22,22 +30,12 @@ $include_path = "Src/Include"
 
 # Include paths
 $inc_sdl = "./Lib/SDL2/include/"
+$inc_sdl_ttf = "./Lib/SDL2_ttf/include/"
+
 
 # Library Paths
 $lib_sdl = "./Lib/SDL2/lib/"
 $lib_sdl_ttf = "./Lib/SDL2_ttf/lib/"
-
-
-# -mwindows  Window based (Not Console Based)
-
-#Dynamic Link
-# $LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
-
-#Static Link
-$LINKER_FLAGS = "-lmingw32",
-"-lSDL2main", "-lSDL2", "-lSDL2_ttf", 
-"-Wl,--dynamicbase", "-Wl,--nxcompat", "-Wl,--high-entropy-va",
-"-lm", "-ldinput8", "-ldxguid", "-ldxerr8", "-luser32", "-lgdi32", "-lwinmm", "-limm32", "-lole32", "-loleaut32", "-lshell32", "-lsetupapi", "-lversion", "-luuid"
 
 
 # -------- BUILD SCRIPT --------
@@ -62,7 +60,7 @@ if (($build_all) -and ($src_files)) {
 			Remove-Item Obj/${file}.o
 		}
 
-		g++ $C_FLAGS -I $include_path -I $inc_sdl -o Obj/${file}.o -c Src/${file}.cpp
+		g++ $C_FLAGS -I $include_path -I $inc_sdl -I $inc_sdl_ttf -o Obj/${file}.o -c Src/${file}.cpp
 	
 	}
 }

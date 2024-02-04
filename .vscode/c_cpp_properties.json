@@ -6,7 +6,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/Src/Include/",
-                "${workspaceFolder}/Lib/SDL2/include"
+                "${workspaceFolder}/Lib/SDL2/include",
+                "${workspaceFolder}/Lib/SDL2_ttf/include"
             ],
 
             "defines": [
