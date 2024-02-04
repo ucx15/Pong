@@ -1,4 +1,5 @@
 vscode/
+Releases/
 
 Obj/*.o
 *.exe
