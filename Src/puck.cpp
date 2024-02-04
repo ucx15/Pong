@@ -26,10 +26,10 @@ void Puck::resetTrails() {
 	trails_itr = 0;
 }
 
-void Puck::update() {
+void Puck::update(float dt) {
 	// Eulers integration
-	x += velX;
-	y += velY;
+	x += velX * dt;
+	y += velY * dt;
 
 	if (trails_itr < TRAIL_SIZE) {
 		trails_x[trails_itr] = x;
@@ -54,18 +54,20 @@ void Puck::draw(SDL_Surface* surface) {
 
 	for (int i=0; i<trails_itr; i++) {
 		t = (float)i/trails_itr;
-		// t = sqrtf(t);    // Easing function
-		t = t*t;    // Easing function
+		
+		// Easing function
+		t = t*t;
+		// t = sqrtf(t);
 
 		tx = trails_x[i];
 		ty = trails_y[i];
 		tr = roundf(r*t);
 
 		toComponents(trail_color, cR, cG, cB, cA);
-		fromComponents(tColor, (uint8_t) cR*(t), (uint8_t) cG*(1-t), cB, cA);
+		fromComponents(tColor, (uint8_t) cR*t*COLOR_FADING_FACTOR, (uint8_t) cG*(1-t)*COLOR_FADING_FACTOR, cB*COLOR_FADING_FACTOR, cA);
 
-		drawCircle(drawBuffer, tx, ty, tr, tColor);
+		fillCircle(drawBuffer, tx, ty, tr, tColor);
 	}
 
-	drawCircle(drawBuffer, int(x), int(y), PUCK_RAD, color);
+	fillCircle(drawBuffer, int(x), int(y), PUCK_RAD, color);
 }

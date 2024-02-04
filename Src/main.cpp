@@ -21,31 +21,6 @@
 #define randF() ((float)rand()/RAND_MAX)
 
 
-
-void parseArgs(int n, char** args) {
-    if (n > 1) {
-        for (int i = 0; i<n; i++) {
-            std::cout << args[i] << '\n';
-        }
-    }
-}
-
-
-SDL_Rect rectBorder{
-    .x = 0,
-    .y = 0,
-    .w = W,
-    .h = H
-};
-
-SDL_Rect rectLine {
-    .x = W/2 - 1,
-    .y = 0,
-    .w = 2,
-    .h = H,
-};
-
-
 class App {
     public:
         SDL_Window *window = NULL;
@@ -58,9 +33,11 @@ class App {
         const char* fontPath = "./Res/Brickshapers.ttf";
     
         bool is_running = false;
-
+        
+        float dTmS, dT;
         int scoreLeft;
         int scoreRight;
+        int paddleHits;
 
         Puck puck;
         Paddle lPaddle;
@@ -108,6 +85,37 @@ class App {
             setup();
         }
 
+        void setup() {
+            scoreLeft = 0;
+            scoreRight = 0;
+            paddleHits = 0;
+
+            puck = Puck(W/2 - PUCK_RAD/2, H/2 - PUCK_RAD/2, PUCK_RAD, PUCK_COLOR);
+
+            lPaddle = Paddle(
+                PADDING,
+                H/2 - PAD_H/2,
+                PAD_W,
+                PAD_H,
+                PADDLE_COLOR
+            );
+
+            rPaddle = Paddle(
+                W - PAD_W - PADDING,
+                H/2 - PAD_H/2,
+                PAD_W,
+                PAD_H,
+                PADDLE_COLOR
+            );
+
+            leftScoreText  = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            rightScoreText = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
+            gameOverText   = Text(fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+
+            leftScoreText.update("0");
+            rightScoreText.update("0");
+        }
+  
         void destroyApp() {
             SDL_DestroyTexture(texture);
             SDL_DestroyRenderer(renderer);
@@ -116,6 +124,8 @@ class App {
             TTF_Quit();
             SDL_Quit();
         };
+
+
 
         // Misc.   
         bool gotWinner() {
@@ -136,35 +146,40 @@ class App {
             auto keys = SDL_GetKeyboardState(NULL);  // Array of u8 codes
             // left paddle
             if (keys[SDL_SCANCODE_W]) {
-                lPaddle.y -= (PADDLE_VEL);
+                lPaddle.y -= PADDLE_VEL*dT + (PADDLE_VEL*paddleHits)/PADDLE_SPEEDING_FACTOR;
             }
 
             if (keys[SDL_SCANCODE_S]) {
-                lPaddle.y += PADDLE_VEL;
+                lPaddle.y += PADDLE_VEL*dT + (PADDLE_VEL*paddleHits)/PADDLE_SPEEDING_FACTOR;
             }
 
             // right paddle
             if (keys[SDL_SCANCODE_UP]) {
-                rPaddle.y -= PADDLE_VEL;
+                rPaddle.y -= PADDLE_VEL*dT + (PADDLE_VEL*paddleHits)/PADDLE_SPEEDING_FACTOR;
             }
 
             if (keys[SDL_SCANCODE_DOWN]) {
-                rPaddle.y += PADDLE_VEL;
+                rPaddle.y += PADDLE_VEL*dT + (PADDLE_VEL*paddleHits)/PADDLE_SPEEDING_FACTOR;
             }
         }
 
 
         // Physics
         void launchPuck() {
-            float x,y;
-            x = PUCK_VEL;
-            y = H*randF();
+            float angle = M_PI/2.f;
+            int ctr = 0;
 
-            float d = sqrtf(sq(W/2.f - x) + sq(H/2.f - y)); 
-            y = PUCK_VEL*y/d;
+            while (fabsf(cosf(angle))<ANGLE_CUTOFF && ctr++<100) {
+                angle = 2.0f * M_PI * randF();
+            }
 
-            puck.velX += x;
-            puck.velY += y;
+            puck.x = (float) W/2.f;
+            puck.y = (float) H/2.f;
+
+            puck.velX = PUCK_VEL*cosf(angle);
+            puck.velY = PUCK_VEL*sinf(angle);
+            
+            puck.resetTrails();
         }
 
         void collision() {
@@ -187,20 +202,20 @@ class App {
 
 
             // Collision detection with Walls
-            if (puck.x < 0) {
+            if (puck.x < PUCK_RAD + PADDING) {
                 scoreRight++;
                 rightScoreText.update(std::to_string(scoreRight));
                 pause();
             }
 
-            else if (puck.x > (W - PUCK_RAD)) {
+            else if (puck.x > (W - PUCK_RAD - PADDING)) {
                 scoreLeft++;
                 leftScoreText.update(std::to_string(scoreLeft));
                 pause();
             }
 
-            if (puck.y < PADDING) {
-                puck.y = PADDING+1;
+            if (puck.y < PADDING + PUCK_RAD) {
+                puck.y = PADDING + PUCK_RAD + 1;
                 puck.velY *= -1;
             }
 
@@ -209,6 +224,7 @@ class App {
                 puck.velY *= -1;
             }
 
+
             // Collision detection with Paddles
             bool leftCond  = (puck.x < 0+PADDING+PAD_W+PUCK_RAD)  &  (puck.y+puck.r/2 > lPaddle.y)  &  (puck.y-puck.r/2 < lPaddle.y+PAD_H);
             bool rightCond = (puck.x > W-PADDING-PAD_W-PUCK_RAD)  &  (puck.y+puck.r/2 > rPaddle.y)  &  (puck.y-puck.r/2 < rPaddle.y+PAD_H);
@@ -216,33 +232,31 @@ class App {
             if (leftCond) {
                 puck.x = 0 + PADDING + PAD_W + PUCK_RAD + 1;
                 puck.velX *= -1;
+                puck.velX += PUCK_VEL*PUCK_SPEEDING_FACTOR;
+                paddleHits++;
             }
 
             else if (rightCond) {
                 puck.x = W - PADDING - PAD_W - PUCK_RAD - 1;
                 puck.velX *= -1;
+                puck.velX -= PUCK_VEL*PUCK_SPEEDING_FACTOR;
+                paddleHits++;
             }
         }
 
        void resetPos() {
-            puck.velX = 0.f;
-            puck.velY = 0.f;
-
             lPaddle.y = H/2 - PAD_H/2;
             rPaddle.y = H/2 - PAD_H/2;
-
-            puck.x = W/2 - PUCK_RAD/2;
-            puck.y = H/2 - PUCK_RAD/2;
-            puck.resetTrails();
         }
 
         void update() {
-            collision();
-
-            puck.update();
+            puck.update(dT);
             lPaddle.update();
             rPaddle.update();
+
+            collision();
         }
+
 
         // Pages
         void homePage() {
@@ -254,7 +268,7 @@ class App {
 
 
             // Clearing Background
-            fillSurface(BG_COLOR);
+            this->fillSurface(BG_COLOR);
 
             // Drawing Borders
             this->drawBorders();
@@ -292,7 +306,9 @@ class App {
         }
 
         void pause() {
+            paddleHits = 0;
             is_running = false;
+
             while (!is_running) {
                 while( SDL_PollEvent(&event) ) {
                     if(event.type == SDL_QUIT) {
@@ -314,8 +330,9 @@ class App {
                 }
             }
 
-            resetPos();
-            launchPuck();
+            this->resetPos();
+            this->launchPuck();
+
             is_running = true;
         }
 
@@ -365,50 +382,20 @@ class App {
             }
 
             scoreLeft = 0;
-            scoreRight = 0; 
+            scoreRight = 0;
+            paddleHits = 0;
 
             leftScoreText.update(std::to_string(scoreLeft));
             rightScoreText.update(std::to_string(scoreRight));
         }
 
 
-        // App
-        void setup() {
-            scoreLeft = 0;
-            scoreRight = 0;
-
-            puck = Puck(W/2 - PUCK_RAD/2, H/2 - PUCK_RAD/2, PUCK_RAD, PUCK_COLOR);
-
-            lPaddle = Paddle(
-                PADDING,
-                H/2 - PAD_H/2,
-                PAD_W,
-                PAD_H,
-                PADDLE_COLOR
-            );
-
-            rPaddle = Paddle(
-                W - PAD_W - PADDING,
-                H/2 - PAD_H/2,
-                PAD_W,
-                PAD_H,
-                PADDLE_COLOR
-            );
-
-            leftScoreText  = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
-            rightScoreText = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
-            gameOverText   = Text(fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
-
-            leftScoreText.update("0");
-            rightScoreText.update("0");
-        }
-    
+        // App  
         void fillSurface(uint32_t color) {
             for (int i=0; i<W*H; i++) {
                 ((uint32_t*)surface->pixels)[i] = color;
             }
         }
-
 
         void present() {
             SDL_UpdateTexture(texture, nullptr, surface->pixels, W*4);
@@ -421,7 +408,6 @@ class App {
         void drawBorders() {
             drawRect((uint32_t*)surface->pixels, PADDING,PADDING, W-2*PADDING,H-2*PADDING, FG_COLOR);
         }
-
 
         void render() {
             // Clearing Surface
@@ -448,7 +434,6 @@ class App {
             homePage();
             launchPuck();
 
-            float dTmS, dT;
             int tLastLogged=0;
 
             TIME_PT t1, t2, t3;
@@ -498,7 +483,7 @@ class App {
 
                 if ( tLastLogged > UPDATE_TIME ) {
                     tLastLogged = 0;
-                    std::cout << "FPS: " << 1/dT << '\n';
+                    printf("%6.2f\n", 1.f/dT);
                 }
             }
 
@@ -507,7 +492,9 @@ class App {
 };
 
 int main(int argc, char** argv) {
-    parseArgs(argc, argv);
+    (void)argc;
+    (void)argv;
+
     srand(time(0));
     
     App pongApp = App();

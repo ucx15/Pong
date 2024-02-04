@@ -21,7 +21,7 @@ class Puck {
 		Puck(float x, float y, float w, uint32_t color);
 		
 		void resetTrails();
-		void update();
+		void update(float dt);
 
 		void draw(SDL_Surface* surface);
 
