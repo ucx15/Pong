@@ -175,13 +175,10 @@ class App {
                 angle = 2.0f * M_PI * randF();
             }
 
-            puck.x = (float) W/2.f;
-            puck.y = (float) H/2.f;
-
             puck.velX = PUCK_VEL*cosf(angle);
             puck.velY = PUCK_VEL*sinf(angle);
             
-            puck.resetTrails();
+            t1 = TIME_NOW();
         }
 
         void collision() {
@@ -247,6 +244,10 @@ class App {
         }
 
        void resetPos() {
+            puck.x = (float) W/2.f;
+            puck.y = (float) H/2.f;
+            puck.resetTrails();
+
             lPaddle.y = H/2 - PAD_H/2;
             rPaddle.y = H/2 - PAD_H/2;
         }
@@ -255,9 +256,6 @@ class App {
             puck.update(dT);
             lPaddle.update();
             rPaddle.update();
-
-            collision();
-            t1 = TIME_NOW();
         }
 
 
@@ -279,8 +277,8 @@ class App {
             lPaddle.draw(surface);
             rPaddle.draw(surface);
             
-            textPong.display(surface, W/2 - textPong.Width()/2, H/2 - textPong.Height()/2);
-            textIns.display(surface, W/2 - textIns.Width()/2, H - H/4);
+            textPong.draw(surface, W/2 - textPong.Width()/2, H/2 - textPong.Height()/2);
+            textIns.draw(surface, W/2 - textIns.Width()/2, H - H/4);
 
             this->present();
 
@@ -311,6 +309,7 @@ class App {
         void pause() {
             paddleHits = 0;
             is_running = false;
+            this->render();
 
             while (!is_running) {
                 while( SDL_PollEvent(&event) ) {
@@ -357,9 +356,9 @@ class App {
             this->drawBorders();
 
             // Draw Score
-            leftScoreText.display(surface, L_TEXT_POSX, L_TEXT_POSY);
-            rightScoreText.display(surface, R_TEXT_POSX, R_TEXT_POSY);
-            gameOverText.display(surface, W/2 - gameOverText.Width()/2, H/2 - gameOverText.Height()/2);
+            leftScoreText.draw(surface, L_TEXT_POSX, L_TEXT_POSY);
+            rightScoreText.draw(surface, R_TEXT_POSX, R_TEXT_POSY);
+            gameOverText.draw(surface, W/2 - gameOverText.Width()/2, H/2 - gameOverText.Height()/2);
             
             this->present();
 
@@ -391,7 +390,8 @@ class App {
 
             leftScoreText.update(std::to_string(scoreLeft));
             rightScoreText.update(std::to_string(scoreRight));
-            t1 = TIME_NOW();
+            this->resetPos();
+            this->launchPuck();
         }
 
 
@@ -424,8 +424,8 @@ class App {
 
 
             // Drawing Score
-            leftScoreText.display(surface, L_TEXT_POSX, L_TEXT_POSY);
-            rightScoreText.display(surface, R_TEXT_POSX, R_TEXT_POSY);
+            leftScoreText.draw(surface, L_TEXT_POSX, L_TEXT_POSY);
+            rightScoreText.draw(surface, R_TEXT_POSX, R_TEXT_POSY);
 
             // Drawing Paddles and Puck
             lPaddle.draw(surface);
@@ -476,6 +476,7 @@ class App {
                 handleKeyboardInput();
 
                 // ------ Physics ------
+                collision();
                 update();
 
                 // ------ Rendering ------

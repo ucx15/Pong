@@ -19,7 +19,7 @@ $C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-O3"
 # Linking (Dynamic)
 
 # -mwindows  Window based (Not Console Based)
-$LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf", "-s"
+$LINKER_FLAGS = "-s", "-lmingw32", "-lSDL2main", "-lSDL2", "-lSDL2_ttf" #, "-mwindows"
 
 
 

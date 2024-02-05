@@ -17,7 +17,7 @@ void Text::update(std::string msg) {
 }
 
 
-void Text::display(SDL_Surface* surface, int x, int y) {
+void Text::draw(SDL_Surface* surface, int x, int y) {
 	_text_rect.x = x;
 	_text_rect.y = y;
 	SDL_BlitSurface(_text_surface, NULL, surface, &_text_rect);

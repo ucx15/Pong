@@ -21,7 +21,7 @@ class Text {
 		Text(const char* font_path, int font_size, SDL_Color color);
 
 		void update(std::string text);
-		void display(SDL_Surface* surface,int x, int y);
+		void draw(SDL_Surface* surface,int x, int y);
 		
 		float Width();
 		float Height();
