@@ -2,6 +2,8 @@
 
 # pragma once
 
+#include <cstdint>
+
 #define W 840
 #define H 640
 #define PADDING 5						// Additional padding b/w Window and playable area
