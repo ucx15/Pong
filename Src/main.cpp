@@ -30,6 +30,8 @@ class App {
         SDL_Event event;
 
 
+        TIME_PT t1, t2, t3;
+
         const char* fontPath = "./Res/Brickshapers.ttf";
     
         bool is_running = false;
@@ -255,6 +257,7 @@ class App {
             rPaddle.update();
 
             collision();
+            t1 = TIME_NOW();
         }
 
 
@@ -360,6 +363,7 @@ class App {
             
             this->present();
 
+            is_running = false;
             while (!is_running) {
                 while( SDL_PollEvent(&event) ) {
                     if(event.type == SDL_QUIT) {
@@ -387,6 +391,7 @@ class App {
 
             leftScoreText.update(std::to_string(scoreLeft));
             rightScoreText.update(std::to_string(scoreRight));
+            t1 = TIME_NOW();
         }
 
 
@@ -436,7 +441,6 @@ class App {
 
             int tLastLogged=0;
 
-            TIME_PT t1, t2, t3;
             t1 = TIME_NOW();
 
 
@@ -464,7 +468,6 @@ class App {
 
                 // ------ Validation ------
                 if (gotWinner()) {
-                    is_running = false;
                     gameOver();
                 }
 
@@ -488,8 +491,9 @@ class App {
             }
 
         destroyApp();
-    }
+        }
 };
+
 
 int main(int argc, char** argv) {
     (void)argc;
