@@ -18,7 +18,7 @@ constexpr int MSPF = 1000.f / FPS;  	// Milliseconds per frame (Ideal)
 #define COLOR_FADING_FACTOR 0.8f		//  dull trail color by this much
 
 
-#define WIN_SCORE 5
+#define WIN_SCORE 4
 constexpr int TRAIL_SIZE = .8 * FPS;
 
 

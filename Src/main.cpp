@@ -48,6 +48,7 @@ class App {
         Text leftScoreText;
         Text rightScoreText;
         Text gameOverText;
+        Text whoWinsText;
 
 
         App() {
@@ -113,9 +114,13 @@ class App {
             leftScoreText  = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
             rightScoreText = Text(fontPath, FONT_SIZE_SCORE, SDL_Color{to8BPC(FONT_COLOR_TEXT)} );
             gameOverText   = Text(fontPath, FONT_SIZE_TITLE, SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+            whoWinsText    = Text(fontPath, FONT_SIZE_TEXT,  SDL_Color{to8BPC(FONT_COLOR_TITLE)} );
+
+            
 
             leftScoreText.update("0");
             rightScoreText.update("0");
+            gameOverText.update("Game Over!");
         }
   
         void destroyApp() {
@@ -340,13 +345,16 @@ class App {
 
         void gameOver() {
             if (scoreLeft > scoreRight){
-                gameOverText.update("Left Wins");
+                whoWinsText.update("Left Wins");
+                // gameOverText.update("Left Wins");
             }
             else if (scoreRight > scoreLeft) {
-                gameOverText.update("Right Wins");
+                whoWinsText.update("Right Wins");
+                // gameOverText.update("Right Wins");
             }
             else {
-                gameOverText.update("Draw");
+                whoWinsText.update("Draw");
+                // gameOverText.update("Draw");
             }
 
             // Clearing Background
@@ -359,7 +367,8 @@ class App {
             leftScoreText.draw(surface, L_TEXT_POSX, L_TEXT_POSY);
             rightScoreText.draw(surface, R_TEXT_POSX, R_TEXT_POSY);
             gameOverText.draw(surface, W/2 - gameOverText.Width()/2, H/2 - gameOverText.Height()/2);
-            
+            whoWinsText.draw(surface, W/2 - whoWinsText.Width()/2, 2*H/3 + whoWinsText.Height()/2);
+
             this->present();
 
             is_running = false;
