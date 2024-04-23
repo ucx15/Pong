@@ -48,6 +48,11 @@ if (Test-Path ./$out_file) {
 # Compiling
 Write-Output "Building"
 
+
+# resource file
+windres config.rc -O coff -o Obj/config.res
+
+
 if (($build_all) -and ($src_files)) {
 	if (!(Test-Path("./Obj"))) {
 		mkdir "./Obj";
